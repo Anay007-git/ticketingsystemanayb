@@ -30,7 +30,7 @@ import {
 } from 'react-icons/fa';
 import './App.css';
 
-const socket = io('http://localhost:5001');
+// const socket = io('http://localhost:5001'); // Disabled for static deployment
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -56,79 +56,96 @@ function App() {
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null);
 
   useEffect(() => {
-    fetchTickets();
-    fetchUsers();
-
-    socket.on('offer', handleOffer);
-    socket.on('answer', handleAnswer);
-    socket.on('ice-candidate', handleIceCandidate);
-
-    return () => {
-      socket.off('offer', handleOffer);
-      socket.off('answer', handleAnswer);
-      socket.off('ice-candidate', handleIceCandidate);
-    };
+    // Initialize with demo data for static deployment
+    initializeDemoData();
   }, []);
 
-  const fetchTickets = async () => {
-    try {
-      const response = await axios.get('http://localhost:5001/api/tickets');
-      setTickets(response.data);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get('http://localhost:5001/api/users');
-      setUsers(response.data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
-  const updateTicket = async (id, updates) => {
-    try {
-      await axios.put(`http://localhost:5001/api/tickets/${id}`, updates);
-      fetchTickets();
-      if (updates.assignedTo) {
-        showNotification('Ticket assigned successfully!', 'success');
-      } else if (updates.status) {
-        showNotification('Ticket status updated successfully!', 'success');
+  const initializeDemoData = () => {
+    // Demo tickets for static deployment
+    const demoTickets = [
+      {
+        id: 1,
+        subject: 'Login Issues with SAP System',
+        description: 'Users unable to login to SAP system after recent update',
+        from: 'john.doe@company.com',
+        assignedTo: 1,
+        assignedName: 'Alice Johnson',
+        priority: 'High',
+        status: 'open',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 2,
+        subject: 'Email Server Down',
+        description: 'Email server is not responding, users cannot send/receive emails',
+        from: 'jane.smith@company.com',
+        assignedTo: 2,
+        assignedName: 'Bob Wilson',
+        priority: 'Critical',
+        status: 'in-progress',
+        createdAt: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: 3,
+        subject: 'Printer Not Working',
+        description: 'Office printer on 3rd floor is not printing documents',
+        from: 'mike.brown@company.com',
+        assignedTo: 1,
+        assignedName: 'Alice Johnson',
+        priority: 'Medium',
+        status: 'testing',
+        createdAt: new Date(Date.now() - 172800000).toISOString()
       }
-    } catch (error) {
-      console.error('Error updating ticket:', error);
-      showNotification('Failed to update ticket', 'error');
+    ];
+    
+    const demoUsers = [
+      { id: 1, name: 'Alice Johnson', email: 'alice@company.com', role: 'IT Support', department: 'IT' },
+      { id: 2, name: 'Bob Wilson', email: 'bob@company.com', role: 'SAP Support', department: 'IT' },
+      { id: 3, name: 'Carol Davis', email: 'carol@company.com', role: 'Admin', department: 'IT' }
+    ];
+    
+    setTickets(demoTickets);
+    setUsers(demoUsers);
+  };
+
+  const updateTicket = (id, updates) => {
+    setTickets(prevTickets => 
+      prevTickets.map(ticket => 
+        ticket.id === id ? { ...ticket, ...updates } : ticket
+      )
+    );
+    if (updates.assignedTo) {
+      showNotification('Ticket assigned successfully!', 'success');
+    } else if (updates.status) {
+      showNotification('Ticket status updated successfully!', 'success');
     }
   };
 
-  const createTicket = async (e) => {
+  const createTicket = (e) => {
     e.preventDefault();
-    try {
-      await axios.post('http://localhost:5001/api/tickets', formData);
-      setFormData({ subject: '', description: '', from: '', assignedTo: '', priority: '' });
-      setShowForm(false);
-      fetchTickets();
-      showNotification('Ticket created successfully!', 'success');
-    } catch (error) {
-      console.error('Error creating ticket:', error);
-      showNotification('Failed to create ticket', 'error');
-    }
+    const newTicket = {
+      id: Math.max(...tickets.map(t => t.id), 0) + 1,
+      ...formData,
+      assignedName: users.find(u => u.id === parseInt(formData.assignedTo))?.name || 'Unassigned',
+      status: 'open',
+      createdAt: new Date().toISOString()
+    };
+    setTickets(prev => [...prev, newTicket]);
+    setFormData({ subject: '', description: '', from: '', assignedTo: '', priority: '' });
+    setShowForm(false);
+    showNotification('Ticket created successfully!', 'success');
   };
 
-  const createUser = async (e) => {
+  const createUser = (e) => {
     e.preventDefault();
-    try {
-      await axios.post('http://localhost:5001/api/users', userFormData);
-      setUserFormData({ name: '', email: '', role: '', department: '' });
-      setShowUserForm(false);
-      fetchUsers();
-      showNotification('User created successfully!', 'success');
-    } catch (error) {
-      console.error('Error creating user:', error);
-      showNotification('Failed to create user', 'error');
-    }
+    const newUser = {
+      id: Math.max(...users.map(u => u.id), 0) + 1,
+      ...userFormData
+    };
+    setUsers(prev => [...prev, newUser]);
+    setUserFormData({ name: '', email: '', role: '', department: '' });
+    setShowUserForm(false);
+    showNotification('User created successfully!', 'success');
   };
 
   const startScreenShare = async (ticketId) => {
@@ -140,44 +157,9 @@ function App() {
       setLocalStream(stream);
       setIsSharing(true);
 
-      socket.emit('join-support', ticketId);
-
-      const pc = new RTCPeerConnection();
-      setPeerConnection(pc);
-
-      const dataChannel = pc.createDataChannel('remote-control');
-      dataChannel.onopen = () => {
-        console.log('Data channel opened for remote control');
-        setIsControlling(true);
-      };
-      dataChannel.onmessage = (event) => {
-        const command = JSON.parse(event.data);
-        handleRemoteControlCommand(command);
-      };
-
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('ice-candidate', { ticketId, candidate: event.candidate });
-        }
-      };
-
-      pc.ontrack = (event) => {
-        setRemoteStream(event.streams[0]);
-      };
-
-      pc.ondatachannel = (event) => {
-        const channel = event.channel;
-        channel.onmessage = (e) => {
-          const command = JSON.parse(e.data);
-          handleRemoteControlCommand(command);
-        };
-      };
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      socket.emit('offer', { ticketId, offer });
+      // Screen sharing demo - would need backend for full functionality
+      showNotification('Screen sharing started (demo mode)', 'success');
+      console.log('Screen sharing would be initiated for ticket:', ticketId);
     } catch (error) {
       console.error('Error starting screen share:', error);
     }
