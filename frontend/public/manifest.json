@@ -1,0 +1,8 @@
+{
+  "short_name": "Lux Ticketing",
+  "name": "Lux Ticketing Tools",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
