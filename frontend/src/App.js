@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import io from 'socket.io-client';
 import {
   FaTachometerAlt,
   FaList,
@@ -41,10 +39,6 @@ function App() {
   const [formData, setFormData] = useState({ subject: '', description: '', from: '', assignedTo: '', priority: '' });
   const [isSharing, setIsSharing] = useState(false);
   const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-  const [peerConnection, setPeerConnection] = useState(null);
-  const [isControlling, setIsControlling] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState(null);
   const [users, setUsers] = useState([]);
   const [showUserForm, setShowUserForm] = useState(false);
   const [userFormData, setUserFormData] = useState({ name: '', email: '', role: '', department: '' });
@@ -166,20 +160,8 @@ function App() {
   };
 
   const handleOffer = async (data) => {
-    const peerConnection = new RTCPeerConnection();
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit('ice-candidate', { ticketId: data.ticketId, candidate: event.candidate });
-      }
-    };
-    peerConnection.ontrack = (event) => {
-      setRemoteStream(event.streams[0]);
-    };
-
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    socket.emit('answer', { ticketId: data.ticketId, answer });
+    // WebRTC functionality disabled for static deployment
+    console.log('WebRTC offer handling disabled in demo mode:', data);
   };
 
   const handleAnswer = (data) => {
