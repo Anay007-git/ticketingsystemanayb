@@ -10,19 +10,12 @@ import {
   FaUser,
   FaCog,
   FaSearch,
-  FaFilter,
   FaTimes,
   FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
-  FaPause,
-  FaUserCheck,
-  FaEnvelope,
-  FaBuilding,
   FaBars,
   FaSignOutAlt,
-  FaArrowUp,
-  FaArrowDown,
   FaVial,
   FaCheck
 } from 'react-icons/fa';
@@ -164,13 +157,7 @@ function App() {
     console.log('WebRTC offer handling disabled in demo mode:', data);
   };
 
-  const handleAnswer = (data) => {
-    // Handle answer from support
-  };
 
-  const handleIceCandidate = (data) => {
-    // Handle ICE candidates
-  };
 
   const getPriorityIcon = (priority) => {
     switch(priority?.toLowerCase()) {
@@ -190,9 +177,7 @@ function App() {
     `LUX-${ticket.id}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleRemoteControlCommand = (command) => {
-    console.log('Received remote control command:', command);
-  };
+
 
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
