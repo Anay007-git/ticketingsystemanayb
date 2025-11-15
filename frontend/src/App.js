@@ -30,8 +30,7 @@ function App() {
   const [tickets, setTickets] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ subject: '', description: '', from: '', assignedTo: '', priority: '' });
-  const [isSharing, setIsSharing] = useState(false);
-  const [localStream, setLocalStream] = useState(null);
+
   const [users, setUsers] = useState([]);
   const [showUserForm, setShowUserForm] = useState(false);
   const [userFormData, setUserFormData] = useState({ name: '', email: '', role: '', department: '' });
@@ -137,18 +136,16 @@ function App() {
 
   const startScreenShare = async (ticketId) => {
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
+      await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: false
       });
-      setLocalStream(stream);
-      setIsSharing(true);
-
       // Screen sharing demo - would need backend for full functionality
       showNotification('Screen sharing started (demo mode)', 'success');
       console.log('Screen sharing would be initiated for ticket:', ticketId);
     } catch (error) {
       console.error('Error starting screen share:', error);
+      showNotification('Screen sharing not available', 'error');
     }
   };
 
